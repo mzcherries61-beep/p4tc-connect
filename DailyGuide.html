@@ -22601,7 +22601,12 @@
     });
   }
   function speakText(text, vs, onEnd) {
-    elevenSpeak(text, onEnd);
+    if (window._triggeredByMic) {
+      window._triggeredByMic = false;
+      browserSpeak(text, onEnd);
+    } else {
+      elevenSpeak(text, onEnd);
+    }
   }
   function translateAndSpeak(text, onEnd) {
     if (_voiceLang === "en") {
@@ -22848,6 +22853,7 @@
         setTranscript(heard);
         if (FINISH_WORDS.some((w) => heard.includes(w))) {
           setTranscript(heard);
+          window._triggeredByMic = true;
           advanceStep(currentStepRef.current);
         }
       };
