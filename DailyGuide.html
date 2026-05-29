@@ -22557,6 +22557,12 @@
     window.speechSynthesis.speak(utt);
   }
   function elevenSpeak(text, onEnd) {
+    if (window._activeRec) {
+      try {
+        window._activeRec.stop();
+      } catch (e) {
+      }
+    }
     if (_elevenAudio) {
       _elevenAudio.pause();
       _elevenAudio = null;
@@ -22576,6 +22582,14 @@
         URL.revokeObjectURL(url);
         _elevenAudio = null;
         if (onEnd) onEnd();
+        if (window._micListening && window._activeRec) {
+          setTimeout(function() {
+            try {
+              window._activeRec.start();
+            } catch (e) {
+            }
+          }, 300);
+        }
       };
       const p = _elevenAudio.play();
       if (p) p.catch(function() {
@@ -22587,11 +22601,7 @@
     });
   }
   function speakText(text, vs, onEnd) {
-    if (window._micListening) {
-      browserSpeak(text, onEnd);
-    } else {
-      elevenSpeak(text, onEnd);
-    }
+    elevenSpeak(text, onEnd);
   }
   function translateAndSpeak(text, onEnd) {
     if (_voiceLang === "en") {
@@ -22807,9 +22817,11 @@
       rec.interimResults = true;
       rec.lang = "en-US";
       recognitionRef.current = rec;
+      window._activeRec = rec;
       rec.onstart = () => {
         listeningRef.current = true;
         window._micListening = true;
+        window._activeRec = rec;
         setListening(true);
         setVoiceStatus('Say "finish" when done');
       };
